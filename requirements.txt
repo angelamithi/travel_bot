@@ -2,3 +2,5 @@ python-dotenv
 openai
 requests
 flask 
+flask_socketio 
+flask_cors
