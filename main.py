@@ -39,7 +39,16 @@ class AssistantManager:
             )
 
     def create_assistant(self, name, instructions, tools):
-        if not self.assistant:
+        assistant_file_path = 'assistant.json'
+
+        # If there is an assistant.json file already, then load that assistant
+        if os.path.exists(assistant_file_path):
+            with open(assistant_file_path, 'r') as file:
+                assistant_data = json.load(file)
+                assistant_id = assistant_data['assistant_id']
+                print("Loaded existing assistant ID.")
+        else:
+        
             assistant_obj = self.client.beta.assistants.create(
                 name=name,
                 instructions=instructions,
@@ -49,6 +58,14 @@ class AssistantManager:
             AssistantManager.assistant_id = assistant_obj.id
             self.assistant = assistant_obj  # This is now our new assistant
             print(f"Assistant ID:::: {self.assistant.id}")
+
+            with open(assistant_file_path, 'w') as file:
+                json.dump({'assistant_id': self.assistant.id}, file)
+                print("Created a new assistant and saved the ID.")
+
+                assistant_id = self.assistant.id
+
+        return assistant_id
 
     def create_thread(self):
         if not self.thread:
@@ -154,7 +171,7 @@ def main():
 
     manager = AssistantManager(model=model)
     if not st.session_state.assistant_id:
-        manager.create_assistant(
+        assistant_id=manager.create_assistant(
             name="Tara the Travel Mate",
             instructions="You are Tara, an experienced travel companion. Assist users to search for available flights and book flights on their behalf.",
             tools=[
@@ -178,7 +195,7 @@ def main():
                 }
             ],
         )
-        st.session_state.assistant_id = manager.assistant.id
+        st.session_state.assistant_id = assistant_id
 
     if not st.session_state.thread_id:
         manager.create_thread()
